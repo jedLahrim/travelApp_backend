@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    env_file:
+      - .env
+    ports:
+      - "3001:3001"
+    depends_on:
+      - db
+    image: jedla/travelapp:1.0
+    restart: on-failure
+    networks:
+      - travelApp-network
+
+  db:
+    image: postgres
+    hostname: localhost
+    container_name: travelApp_host
+    restart: always
+    environment:
+      POSTGRES_DATABASE: postgres
+      POSTGRES_PASSWORD: thisIsPassword
+      POSTGRES_USER: jolix16
+    volumes:
+      - db:/var/lib/mysql
+    ports:
+      - "5432:5432"
+    networks:
+      - travelApp-network
+
+volumes:
+  db:
+
+networks:
+  travelApp-network:
