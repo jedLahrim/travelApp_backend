@@ -15,19 +15,17 @@ import { Stripe } from "stripe";
 import { GetUser } from "../../decorator/get-user.decorator";
 import { Order } from "../../entities/order.entity";
 import { Status } from "../../commons/enums/status.enum";
-import { _findOne } from "../destination/destination.routes";
 import { Refund } from "../../entities/refund.entity";
 import { StripeIntent } from "../../entities/stripe-intent.entity";
-
 const route = express.Router();
+export const stripe = new Stripe(process.env.STRIPE_API_SECRET_KEY, {
+  apiVersion: "2022-11-15",
+});
 route.post(
   "/api/stripe/create_checkout",
   authGuard,
   checkValidationErrors,
   async (req, res) => {
-    const stripe = new Stripe(process.env.STRIPE_API_SECRET_KEY, {
-      apiVersion: "2022-11-15",
-    });
     const { destinationId, successUrl, cancelUrl } = req.body;
     const user = await GetUser(req);
     const destination = await Destination.findOneBy({ id: destinationId });
@@ -39,8 +37,7 @@ route.post(
         user,
         successUrl,
         cancelUrl,
-        res,
-        stripe
+        res
       );
       if (!session) {
       } else {
@@ -64,8 +61,7 @@ async function _getStripeSession(
   user: User,
   success_url: string,
   cancel_url: string,
-  res: Response,
-  stripe: Stripe
+  res: Response
 ) {
   try {
     const price = await stripe.prices.create({
@@ -96,7 +92,7 @@ async function _getStripeSession(
   }
 }
 
-async function _getCustomerId(user: User, stripe: Stripe) {
+async function _getCustomerId(user: User) {
   if (user.customerId) {
     return user.customerId;
   } else {
@@ -123,10 +119,10 @@ async function handleWebhook(body: any, res: Response): Promise<void> {
     case "payment_intent.failed":
       break;
     case "payment_intent.amount_capturable_updated":
-      // await _handlePaymentIntentAmountCapturableUpdated(result);
+      await _handlePaymentIntentAmountCapturableUpdated(result, res);
       break;
     case "setup_intent.succeeded":
-      // await _handleSetupIntentSucceeded(result);
+      await _handleSetupIntentSucceeded(result, stripe, res);
       break;
     default:
   }
@@ -150,12 +146,16 @@ async function handleWebhook(body: any, res: Response): Promise<void> {
 route.post("/api/stripe/free_order", authGuard, async (req, res) => {
   const { destinationId } = req.body;
   const user = await GetUser(req);
-  const destination = await _findOne(destinationId, res);
+  const destination = await Destination.findOne({
+    where: { id: destinationId },
+  });
+  if (!destination) return res.json(new AppError(ERR_NOT_FOUND_DESTINATIONS));
   const order = Order.create({
     user,
     destination,
   });
-  destination.joinedNumberParticipants += 1;
+  destination.joinedNumberParticipants =
+    destination.joinedNumberParticipants + 1;
   await Destination.save(destination);
   order.destination = destination;
   order.status = Status.FREE_ORDER;
@@ -167,9 +167,6 @@ route.post(
   checkValidationErrors,
   authGuard,
   async (req, res) => {
-    const stripe = new Stripe(process.env.STRIPE_API_SECRET_KEY, {
-      apiVersion: "2022-11-15",
-    });
     const { orderId, reason } = req.body;
     const user = await GetUser(req);
     const order = await Order.findOne({
@@ -185,15 +182,10 @@ route.post(
       return res.json(new AppError(ERR_NOT_FOUND_ORDER));
     }
 
-    await _checkOrderRefund(order, reason, res, stripe);
+    await _checkOrderRefund(order, reason, res);
   }
 );
-async function _checkOrderRefund(
-  order: Order,
-  reason: string,
-  res: Response,
-  stripe: Stripe
-) {
+async function _checkOrderRefund(order: Order, reason: string, res: Response) {
   if (order.status == Status.REFUNDED) {
     return res.json(new AppError(ERR_ORDER_ALREADY_REFUNDED));
   }
@@ -225,7 +217,6 @@ async function _checkOrderRefund(
 /// PAYMENT INTENT
 async function _handlePaymentIntentAmountCapturableUpdated(
   result: any,
-  stripe: Stripe,
   res: Response
 ) {
   const { destinationId, userId } = result.metadata;
@@ -239,7 +230,7 @@ async function _handlePaymentIntentAmountCapturableUpdated(
   });
   await StripeIntent.save(stripeIntent);
 
-  await _checkToCharge(stripe, res, paymentIntent, null, destinationId, userId);
+  await _checkToCharge(res, paymentIntent, null, destinationId, userId);
 }
 async function _handleSetupIntentSucceeded(
   result: any,
@@ -257,10 +248,9 @@ async function _handleSetupIntentSucceeded(
   });
   await StripeIntent.save(stripeIntent);
 
-  await _checkToCharge(stripe, res, null, setupIntent, destinationId, userId);
+  await _checkToCharge(res, null, setupIntent, destinationId, userId);
 }
 async function _checkToCharge(
-  stripe: Stripe,
   res: Response,
   paymentIntent?: string,
   setupIntent?: string,
@@ -279,7 +269,7 @@ async function _checkToCharge(
     ) {
       // conditions satisfied NOW
       // TODO: charge all intent in table
-      await _chargeAllOrdersByDestinationId(destination, userId, stripe);
+      await _chargeAllOrdersByDestinationId(destination, userId);
     } else {
       // conditions satisfied already before
       // TODO: charge instantly
@@ -290,7 +280,6 @@ async function _checkToCharge(
           setupIntent,
           destination,
           userId,
-          stripe
         );
       }
     }
@@ -298,8 +287,7 @@ async function _checkToCharge(
 }
 async function _chargeAllOrdersByDestinationId(
   destination: Destination,
-  userId: string,
-  stripe: Stripe
+  userId: string
 ) {
   const stripeIntents = await StripeIntent.find({
     where: {
@@ -313,20 +301,14 @@ async function _chargeAllOrdersByDestinationId(
     if (stripeIntent.paymentIntent) {
       stripe.paymentIntents.capture(stripeIntent.paymentIntent);
     } else if (stripeIntent.setupIntent) {
-      _chargeOrderBySetupIntent(
-        stripeIntent.setupIntent,
-        destination,
-        userId,
-        stripe
-      );
+      _chargeOrderBySetupIntent(stripeIntent.setupIntent, destination, userId);
     }
   });
 }
 async function _chargeOrderBySetupIntent(
   setupIntent: string,
   destination: Destination,
-  userId: string,
-  stripe: Stripe
+  userId: string
 ) {
   const setupIntentData = await stripe.setupIntents.retrieve(setupIntent);
   const paymentMethodId = _getPaymentMethodId(setupIntentData.payment_method);
@@ -354,9 +336,6 @@ function _getPaymentMethodId(paymentMethod: string | Stripe.PaymentMethod) {
 }
 
 route.post("/api/stripe/create_payment", authGuard, async (req, res) => {
-  const stripe = new Stripe(process.env.STRIPE_API_SECRET_KEY, {
-    apiVersion: "2022-11-15",
-  });
   // check if Destination allowed to order
   const { destinationId } = req.body;
   const user = await GetUser(req);
@@ -367,8 +346,8 @@ route.post("/api/stripe/create_payment", authGuard, async (req, res) => {
 
   if (!destination.isAllowedToOrder)
     return res.json(new AppError(ERR_DESTINATION_NOT_ALLOWED_TO_ORDER));
-  let paymentIntent = await _placeOnHoldPayment(destination, user, stripe, res);
-  let setupIntent = await _setupFuturePayment(destination, user, stripe, res);
+  let paymentIntent = await _placeOnHoldPayment(destination, user, res);
+  let setupIntent = await _setupFuturePayment(destination, user, res);
 
   return res.json({
     paymentIntent: paymentIntent,
@@ -379,7 +358,6 @@ route.post("/api/stripe/create_payment", authGuard, async (req, res) => {
 async function _placeOnHoldPayment(
   destination: Destination,
   user: User,
-  stripe: Stripe,
   res: Response
 ): Promise<String> {
   try {
@@ -404,11 +382,10 @@ async function _placeOnHoldPayment(
 async function _setupFuturePayment(
   destination: Destination,
   user: User,
-  stripe: Stripe,
   res: Response
 ) {
   try {
-    const customer = await _getCustomerId(user, stripe);
+    const customer = await _getCustomerId(user);
     const setupIntent = await stripe.setupIntents.create({
       customer: customer,
       payment_method_types: ["bancontact", "card", "ideal"],

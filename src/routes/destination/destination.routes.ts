@@ -16,7 +16,7 @@ import {
   ERROR_START_DATE_GRATER_END_DATE,
 } from "../../commons/errors/errors-codes";
 import { GetUser } from "../../decorator/get-user.decorator";
-import { CategoryType, validateEnum } from "../../commons/enums/category-type";
+import { CategoryType } from "../../commons/enums/category-type";
 import { Category } from "../../entities/category.entity";
 import { Attachment } from "../../entities/attachment.entity";
 import { In } from "typeorm";
@@ -35,9 +35,6 @@ router.post(
     }
     return true;
   }),
-  body("joinedNumberParticipants")
-    .isNumeric()
-    .withMessage("joinedNumberParticipants must be number"),
   body("maxTravelers").isNumeric().withMessage("maxTravelers must be number"),
   body("description").isString().withMessage("description must be string"),
   body("startDate").custom((input, { req }) => {
@@ -48,6 +45,12 @@ router.post(
   }),
   body("long").isDecimal().withMessage("long must be a valid longitude"),
   body("lat").isDecimal().withMessage("lat must be a latitude"),
+  body("category").custom((category, { req }) => {
+    if (!Object.values(CategoryType).includes(category.name)) {
+      throw new Error("put a valid category type");
+    }
+    return true;
+  }),
   checkValidationErrors,
   authGuard,
   async (req, res) => {
@@ -66,15 +69,9 @@ router.post(
         lat,
         category,
         primaryAttachment,
-        joinedNumberParticipants,
         maxTravelers,
         attachments,
       } = req.body;
-      if (!validateEnum(category.name, CategoryType)) {
-        return res
-          .status(400)
-          .json(new AppError("category must be a valid type"));
-      }
       if (
         _checkFields(
           startDate,
@@ -97,7 +94,6 @@ router.post(
           endDate,
           requiredNumberTravelers,
           category: foundedCategory,
-          joinedNumberParticipants,
           maxTravelers,
           user: { id: user.id },
         });
@@ -204,6 +200,12 @@ router.patch(
   body("description").isString().withMessage("description must be string"),
   body("long").isDecimal().withMessage("long must be a valid longitude"),
   body("lat").isDecimal().withMessage("lat must be a latitude"),
+  body("category").custom((category, { req }) => {
+    if (!Object.values(CategoryType).includes(category.name)) {
+      throw new Error("put a valid category type");
+    }
+    return true;
+  }),
   checkValidationErrors,
   async (req, res) => {
     const { id } = req.params;
@@ -223,9 +225,6 @@ router.patch(
       joinedNumberParticipants,
       maxTravelers,
     } = req.body;
-    if (!validateEnum(category.name, CategoryType)) {
-      return res.status(400).json(new AppError("put a valid category type"));
-    }
     if (
       _checkFields(
         startDate,

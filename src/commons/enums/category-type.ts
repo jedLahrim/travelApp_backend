@@ -6,7 +6,3 @@ export enum CategoryType {
   FOREST = "FOREST",
   CAMPING = "CAMPING",
 }
-
-export function validateEnum(value: string, enumObject: Object): boolean {
-  return Object.values(enumObject).includes(value);
-}
