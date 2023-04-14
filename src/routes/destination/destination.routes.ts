@@ -54,16 +54,16 @@ router.post(
                 price,
                 description,
                 startDate,
-        endDate,
-        requiredNumberTravelers,
-        long,
-        lat,
-        category,
-        primaryAttachment,
-        maxTravelers,
-        attachments,
-      } = req.body;
-      if (
+                endDate,
+                requiredNumberTravelers,
+                long,
+                lat,
+                category,
+                primaryAttachment,
+                maxTravelers,
+                attachments,
+            } = req.body;
+            if (
         _checkFields(
           startDate,
           endDate,
@@ -168,15 +168,15 @@ router.get(
     async (req, res) => {
         const {title, price, take, skip, category} = req.query;
         const query = Destination.createQueryBuilder("destination");
-    await Filter.CATEGORY_FILTER(category, query);
-    Filter.TITLE_FILTER(title, query);
-    Filter.PRICE_FILTER(price, query);
-    query.take(+take ? +take : Constant.TAKE);
-    query.skip(+skip ? +skip : Constant.SKIP);
-    const [data, total] = await query.getManyAndCount();
-    const destinations = new Pagination<Destination>(data, total);
-    res.json(destinations);
-  }
+        await Filter.CATEGORY_FILTER(category, query);
+        Filter.TITLE_FILTER(title, query);
+        Filter.PRICE_FILTER(price, query);
+        query.take(+take ? +take : Constant.TAKE);
+        query.skip(+skip ? +skip : Constant.SKIP);
+        const [data, total] = await query.getManyAndCount();
+        const destinations = new Pagination<Destination>(data, total);
+        res.json(destinations);
+    }
 );
 router.get("/api/destination/:id", authGuard, async (req, res) => {
   const { id } = req.params;
@@ -217,16 +217,16 @@ router.patch(
             long,
             lat,
             category,
-      primaryAttachment,
-      attachments,
-      startDate,
-      endDate,
-      requiredNumberTravelers,
-      joinedNumberParticipants,
-      maxTravelers,
-    } = req.body;
-    if (
-      _checkFields(
+            primaryAttachment,
+            attachments,
+            startDate,
+            endDate,
+            requiredNumberTravelers,
+            joinedNumberParticipants,
+            maxTravelers,
+        } = req.body;
+        if (
+            _checkFields(
         startDate,
         endDate,
         maxTravelers,
