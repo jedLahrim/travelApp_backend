@@ -64,16 +64,16 @@ router.post(
                 attachments,
             } = req.body;
             if (
-        _checkFields(
-          startDate,
-          endDate,
-          maxTravelers,
-          requiredNumberTravelers,
-          res
-        )
-      ) {
-      } else {
-        const foundedCategory = Category.create({ name: category.name });
+                _checkFields(
+                    startDate,
+                    endDate,
+                    maxTravelers,
+                    requiredNumberTravelers,
+                    res
+                )
+            ) {
+            } else {
+                const foundedCategory = Category.create({name: category.name});
         await Category.save(foundedCategory);
         let destination = Destination.create({
             lat: lat,
@@ -227,16 +227,16 @@ router.patch(
         } = req.body;
         if (
             _checkFields(
-        startDate,
-        endDate,
-        maxTravelers,
-        requiredNumberTravelers,
-        res
-      )
-    ) {
-    } else {
-      const foundedCategory = await Category.findOne({
-        where: { name: category.name },
+                startDate,
+                endDate,
+                maxTravelers,
+                requiredNumberTravelers,
+                res
+            )
+        ) {
+        } else {
+            const foundedCategory = await Category.findOne({
+                where: {name: category.name},
       });
       const updateResult = await Destination.update(
         { id },
