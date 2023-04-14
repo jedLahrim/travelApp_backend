@@ -9,29 +9,34 @@ import {
   ERR_ORDER_ALREADY_REFUNDED,
   ERR_PAYMENT,
 } from "../../commons/errors/errors-codes";
-import { AppError } from "../../commons/errors/app-error";
-import { User } from "../../entities/user.entity";
-import { Stripe } from "stripe";
-import { GetUser } from "../../decorator/get-user.decorator";
-import { Order } from "../../entities/order.entity";
-import { Status } from "../../commons/enums/status.enum";
-import { Refund } from "../../entities/refund.entity";
-import { StripeIntent } from "../../entities/stripe-intent.entity";
-const route = express.Router();
-export const stripe = new Stripe(process.env.STRIPE_API_SECRET_KEY, {
-  apiVersion: "2022-11-15",
-});
-route.post(
-  "/api/stripe/create_checkout",
-  authGuard,
-  checkValidationErrors,
-  async (req, res) => {
-    const { destinationId, successUrl, cancelUrl } = req.body;
-    const user = await GetUser(req);
-    const destination = await Destination.findOneBy({ id: destinationId });
-    if (!destination) return res.json(new AppError(ERR_NOT_FOUND_DESTINATIONS));
+import {AppError} from "../../commons/errors/app-error";
+import {User} from "../../entities/user.entity";
+import {Stripe} from "stripe";
+import {GetUser} from "../../decorator/get-user.decorator";
+import {Order} from "../../entities/order.entity";
+import {Status} from "../../commons/enums/status.enum";
+import {Refund} from "../../entities/refund.entity";
+import {StripeIntent} from "../../entities/stripe-intent.entity";
 
-    try {
+const router = express.Router();
+export let stripe: Stripe;
+router.use((req, res, next) => {
+  stripe = new Stripe(process.env.STRIPE_API_SECRET_KEY, {
+    apiVersion: "2022-11-15",
+  });
+  next();
+});
+router.post(
+    "/api/stripe/create_checkout",
+    authGuard,
+    checkValidationErrors,
+    async (req, res) => {
+      const {destinationId, successUrl, cancelUrl} = req.body;
+      const user = await GetUser(req);
+      const destination = await Destination.findOneBy({id: destinationId});
+      if (!destination) return res.json(new AppError(ERR_NOT_FOUND_DESTINATIONS));
+
+      try {
       const session = await _getStripeSession(
         destination,
         user,
@@ -103,7 +108,8 @@ async function _getCustomerId(user: User) {
     return customer.id;
   }
 }
-route.post("webhook", async (req, res) => {
+
+router.post("webhook", async (req, res) => {
   const body = req.body;
   await handleWebhook(body, res);
 });
@@ -143,11 +149,12 @@ async function handleWebhook(body: any, res: Response): Promise<void> {
     await Order.save(order);
   }
 }
-route.post("/api/stripe/free_order", authGuard, async (req, res) => {
-  const { destinationId } = req.body;
+
+router.post("/api/stripe/free_order", authGuard, async (req, res) => {
+  const {destinationId} = req.body;
   const user = await GetUser(req);
   const destination = await Destination.findOne({
-    where: { id: destinationId },
+    where: {id: destinationId},
   });
   if (!destination) return res.json(new AppError(ERR_NOT_FOUND_DESTINATIONS));
   const order = Order.create({
@@ -162,17 +169,17 @@ route.post("/api/stripe/free_order", authGuard, async (req, res) => {
   await Order.save(order);
   res.json();
 });
-route.post(
-  "/api/stripe/refund",
-  checkValidationErrors,
-  authGuard,
-  async (req, res) => {
-    const { orderId, reason } = req.body;
-    const user = await GetUser(req);
-    const order = await Order.findOne({
-      relations: { user: true, destination: true },
-      where: {
-        id: orderId,
+router.post(
+    "/api/stripe/refund",
+    checkValidationErrors,
+    authGuard,
+    async (req, res) => {
+      const {orderId, reason} = req.body;
+      const user = await GetUser(req);
+      const order = await Order.findOne({
+        relations: {user: true, destination: true},
+        where: {
+          id: orderId,
         user: {
           id: user.id,
         },
@@ -276,11 +283,7 @@ async function _checkToCharge(
       if (paymentIntent) {
         await stripe.paymentIntents.capture(paymentIntent);
       } else if (setupIntent) {
-        await _chargeOrderBySetupIntent(
-          setupIntent,
-          destination,
-          userId,
-        );
+        await _chargeOrderBySetupIntent(setupIntent, destination, userId);
       }
     }
   }
@@ -335,12 +338,12 @@ function _getPaymentMethodId(paymentMethod: string | Stripe.PaymentMethod) {
   }
 }
 
-route.post("/api/stripe/create_payment", authGuard, async (req, res) => {
+router.post("/api/stripe/create_payment", authGuard, async (req, res) => {
   // check if Destination allowed to order
-  const { destinationId } = req.body;
+  const {destinationId} = req.body;
   const user = await GetUser(req);
   const destination = await Destination.findOne({
-    where: { id: destinationId },
+    where: {id: destinationId},
   });
   if (!destination) return res.json(new AppError(ERR_NOT_FOUND_DESTINATIONS));
 
@@ -400,4 +403,5 @@ async function _setupFuturePayment(
     res.json(new AppError(ERR_PAYMENT));
   }
 }
-export { route as orderRoute };
+
+export {router as orderRoute};

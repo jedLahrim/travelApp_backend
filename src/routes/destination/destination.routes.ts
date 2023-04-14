@@ -20,39 +20,30 @@ import { CategoryType } from "../../commons/enums/category-type";
 import { Category } from "../../entities/category.entity";
 import { Attachment } from "../../entities/attachment.entity";
 import { In } from "typeorm";
-import { isISO8601 } from "class-validator";
 const router = express.Router();
 router.post(
-  "/api/destination/create",
-  body("title").isString().withMessage("name must be string"),
-  body("price").isNumeric().withMessage("price must be number"),
-  body("requiredNumberTravelers")
-    .isNumeric()
-    .withMessage("requiredNumberTravelers must be number"),
-  body("endDate").custom((value, { req }) => {
-    if (!isISO8601(value)) {
-      throw new Error("Invalid date format. endDate Must be in ISO format.");
-    }
-    return true;
-  }),
-  body("maxTravelers").isNumeric().withMessage("maxTravelers must be number"),
-  body("description").isString().withMessage("description must be string"),
-  body("startDate").custom((input, { req }) => {
-    if (!isISO8601(input)) {
-      throw new Error("Invalid date format. startDate Must be in ISO format.");
-    }
-    return true;
-  }),
-  body("long").isDecimal().withMessage("long must be a valid longitude"),
-  body("lat").isDecimal().withMessage("lat must be a latitude"),
-  body("category").custom((category, { req }) => {
-    if (!Object.values(CategoryType).includes(category.name)) {
-      throw new Error("put a valid category type");
-    }
-    return true;
-  }),
-  checkValidationErrors,
-  authGuard,
+    "/api/destination/create",
+    body("title").isString().withMessage("name must be string"),
+    body("price").isInt().withMessage("price must be number"),
+    body("requiredNumberTravelers")
+        .isInt()
+        .withMessage("requiredNumberTravelers must be number"),
+    body("endDate")
+        .matches(Constant.DATE_PATTERN)
+        .withMessage("endDate must be in correct format yyyy:mm:dd hh:mm:ss"),
+    body("startDate")
+        .matches(Constant.DATE_PATTERN)
+        .withMessage("startDate must be in correct format yyyy:mm:dd hh:mm:ss"),
+    body("long").isDecimal().withMessage("long must be a valid longitude"),
+    body("lat").isDecimal().withMessage("lat must be a latitude"),
+    body("category").custom((category, {req}) => {
+        if (!Object.values(CategoryType).includes(category.name)) {
+            throw new Error("put a valid category type");
+        }
+        return true;
+    }),
+    checkValidationErrors,
+    authGuard,
   async (req, res) => {
     const user = await GetUser(req);
     if (!user) {
@@ -85,17 +76,17 @@ router.post(
         const foundedCategory = Category.create({ name: category.name });
         await Category.save(foundedCategory);
         let destination = Destination.create({
-          lat: lat,
-          long: long,
-          title,
-          price,
-          description,
-          startDate,
-          endDate,
-          requiredNumberTravelers,
-          category: foundedCategory,
-          maxTravelers,
-          user: { id: user.id },
+            lat: lat,
+            long: long,
+            title,
+            price: price,
+            description,
+            startDate,
+            endDate,
+            requiredNumberTravelers,
+            category: foundedCategory,
+            maxTravelers,
+            user: {id: user.id},
         });
         if (attachments) {
           await _saveAttachment(
@@ -156,17 +147,17 @@ router.get(
     .optional({ nullable: true })
     .isString()
     .withMessage("title must be string"),
-  query("price")
-    .optional({ nullable: true })
-    .isNumeric()
+    query("price")
+        .optional({nullable: true})
+        .isInt()
     .withMessage("price must be number"),
-  query("take")
-    .optional({ nullable: true })
-    .isNumeric()
+    query("take")
+        .optional({nullable: true})
+        .isInt()
     .withMessage("take must be number"),
-  query("skip")
-    .optional({ nullable: true })
-    .isNumeric()
+    query("skip")
+        .optional({nullable: true})
+        .isInt()
     .withMessage("skip must be number"),
   check("category")
     .optional({ nullable: true })
@@ -193,20 +184,29 @@ router.get("/api/destination/:id", authGuard, async (req, res) => {
   res.json(destination);
 });
 router.patch(
-  "/api/destination/update/:id",
-  authGuard,
-  body("title").isString().withMessage("name must be string"),
-  body("price").isNumeric().withMessage("price must be number"),
-  body("description").isString().withMessage("description must be string"),
-  body("long").isDecimal().withMessage("long must be a valid longitude"),
-  body("lat").isDecimal().withMessage("lat must be a latitude"),
-  body("category").custom((category, { req }) => {
-    if (!Object.values(CategoryType).includes(category.name)) {
-      throw new Error("put a valid category type");
-    }
-    return true;
-  }),
-  checkValidationErrors,
+    "/api/destination/update/:id",
+    authGuard,
+    body("title").isString().withMessage("name must be string"),
+    body("price").isInt().withMessage("price must be number"),
+    body("requiredNumberTravelers")
+        .isInt()
+        .withMessage("requiredNumberTravelers must be number"),
+    body("endDate")
+        .matches(Constant.DATE_PATTERN)
+        .withMessage("endDate must be in correct format yyyy:mm:dd hh:mm:ss"),
+    body("startDate")
+        .matches(Constant.DATE_PATTERN)
+        .withMessage("startDate must be in correct format yyyy:mm:dd hh:mm:ss"),
+    body("description").isString().withMessage("description must be string"),
+    body("long").isDecimal().withMessage("long must be a valid longitude"),
+    body("lat").isDecimal().withMessage("lat must be a latitude"),
+    body("category").custom((category, {req}) => {
+        if (!Object.values(CategoryType).includes(category.name)) {
+            throw new Error("put a valid category type");
+        }
+        return true;
+    }),
+    checkValidationErrors,
   async (req, res) => {
     const { id } = req.params;
     const user = await GetUser(req);

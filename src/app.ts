@@ -23,16 +23,20 @@ const main = async () => {
       synchronize: true,
     });
     const app = express();
-    app.use(checkValidationErrors);
     app.use(express.json());
     // use cors
     app.use(cors());
-    app.use(userRoute);
-    app.use(destinationRoute);
-    app.use(favouriteRoute);
-    app.use(categoryRoute);
-    app.use(attachmentRoute);
-    app.use(orderRoute);
+    const routes = [
+      userRoute,
+      destinationRoute,
+      favouriteRoute,
+      categoryRoute,
+      attachmentRoute,
+      orderRoute,
+    ];
+    routes.forEach((value) => {
+      app.use(value);
+    });
     app.listen("3001", (): void => {
       console.log("Server Running!");
     });
