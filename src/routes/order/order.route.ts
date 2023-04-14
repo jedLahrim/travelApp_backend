@@ -57,7 +57,7 @@ router.post(
       } catch (e) {
         console.log(e);
         return res.json(new AppError("ERR", "invalid payment"));
-    }
+      }
   }
 );
 
