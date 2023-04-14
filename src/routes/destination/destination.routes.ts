@@ -44,16 +44,16 @@ router.post(
     }),
     checkValidationErrors,
     authGuard,
-  async (req, res) => {
-    const user = await GetUser(req);
-    if (!user) {
-      res.json(new AppError(ERR_NOT_FOUND_USER));
-    } else {
-      const {
-        title,
-        price,
-        description,
-        startDate,
+    async (req, res) => {
+        const user = await GetUser(req);
+        if (!user) {
+            res.json(new AppError(ERR_NOT_FOUND_USER));
+        } else {
+            const {
+                title,
+                price,
+                description,
+                startDate,
         endDate,
         requiredNumberTravelers,
         long,
@@ -142,32 +142,32 @@ async function _saveAttachment(
   }
 }
 router.get(
-  "/api/destinations",
-  query("title")
-    .optional({ nullable: true })
-    .isString()
-    .withMessage("title must be string"),
+    "/api/destinations",
+    query("title")
+        .optional({nullable: true})
+        .isString()
+        .withMessage("title must be string"),
     query("price")
         .optional({nullable: true})
         .isInt()
-    .withMessage("price must be number"),
+        .withMessage("price must be number"),
     query("take")
         .optional({nullable: true})
         .isInt()
-    .withMessage("take must be number"),
+        .withMessage("take must be number"),
     query("skip")
         .optional({nullable: true})
         .isInt()
-    .withMessage("skip must be number"),
-  check("category")
-    .optional({ nullable: true })
-    .isIn(Object.values(CategoryType))
-    .withMessage("Invalid category type"),
-  checkValidationErrors,
-  authGuard,
-  async (req, res) => {
-    const { title, price, take, skip, category } = req.query;
-    const query = Destination.createQueryBuilder("destination");
+        .withMessage("skip must be number"),
+    check("category")
+        .optional({nullable: true})
+        .isIn(Object.values(CategoryType))
+        .withMessage("Invalid category type"),
+    checkValidationErrors,
+    authGuard,
+    async (req, res) => {
+        const {title, price, take, skip, category} = req.query;
+        const query = Destination.createQueryBuilder("destination");
     await Filter.CATEGORY_FILTER(category, query);
     Filter.TITLE_FILTER(title, query);
     Filter.PRICE_FILTER(price, query);
@@ -207,16 +207,16 @@ router.patch(
         return true;
     }),
     checkValidationErrors,
-  async (req, res) => {
-    const { id } = req.params;
-    const user = await GetUser(req);
-    const {
-      title,
-      price,
-      description,
-      long,
-      lat,
-      category,
+    async (req, res) => {
+        const {id} = req.params;
+        const user = await GetUser(req);
+        const {
+            title,
+            price,
+            description,
+            long,
+            lat,
+            category,
       primaryAttachment,
       attachments,
       startDate,

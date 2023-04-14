@@ -23,6 +23,7 @@ const main = async () => {
     });
     const app = express();
     app.use(express.json());
+    app.use(express.urlencoded({extended: false}));
     // use cors
     app.use(cors());
     const routes = [
@@ -33,8 +34,8 @@ const main = async () => {
       attachmentRoute,
       orderRoute,
     ];
-    routes.forEach((value) => {
-      app.use(value);
+    routes.forEach((router) => {
+      app.use(router);
     });
     app.listen("3001", (): void => {
       console.log("Server Running!");
