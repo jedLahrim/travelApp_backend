@@ -1,4 +1,4 @@
-import express, { Response } from "express";
+import express, {Response} from "express";
 import {authGuard} from "../../jwt/jwt.strategy";
 import {checkValidationErrors} from "../../validation/validation.errors";
 import {Destination} from "../../entities/destination.entity";
@@ -47,16 +47,16 @@ router.post(
         if (!session) {
         } else {
           const publishable_key = (await process.env
-          .STRIPE_PUBLISHABLE_KEY) as string;
+              .STRIPE_PUBLISHABLE_KEY) as string;
 
-        return res.json({
-          stripe_publishable_key: publishable_key,
-          stripe_session_id: session.id,
-        });
-      }
-    } catch (e) {
-      console.log(e);
-      return res.json(new AppError("ERR", "invalid payment"));
+          return res.json({
+            stripe_publishable_key: publishable_key,
+            stripe_session_id: session.id,
+          });
+        }
+      } catch (e) {
+        console.log(e);
+        return res.json(new AppError("ERR", "invalid payment"));
     }
   }
 );
@@ -190,7 +190,7 @@ router.post(
       }
 
       await _checkOrderRefund(order, reason, res);
-  }
+    }
 );
 async function _checkOrderRefund(order: Order, reason: string, res: Response) {
   if (order.status == Status.REFUNDED) {
