@@ -5,7 +5,6 @@ import { userRoute } from "./routes/user/user.routes";
 import { destinationRoute } from "./routes/destination/destination.routes";
 import { favouriteRoute } from "./routes/favourite/favourite.route";
 import { categoryRoute } from "./routes/category/category.route";
-import { checkValidationErrors } from "./validation/validation.errors";
 import { attachmentRoute } from "./routes/attachment/attachment.route";
 import { orderRoute } from "./routes/order/order.route";
 import process from "process";
