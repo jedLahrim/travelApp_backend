@@ -9,7 +9,7 @@ import { Exclude } from "class-transformer";
 import { IsEnum, IsOptional } from "class-validator";
 import { User } from "./user.entity";
 import { Destination } from "./destination.entity";
-import {Status} from "../commons/enums/status.enum";
+import { Status } from "../commons/enums/status.enum";
 
 @Entity()
 export class Order extends BaseEntity {

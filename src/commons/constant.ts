@@ -22,18 +22,18 @@ export class Constant {
   static TAKE = 40;
   static SKIP = 0;
   static DATE_PATTERN =
-      /\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)/;
+    /\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)/;
 }
 
 export class Filter {
   static TITLE_FILTER = function (
-      title,
-      query: SelectQueryBuilder<Destination>
+    title,
+    query: SelectQueryBuilder<Destination>
   ) {
-    if (title) query.andWhere("destination.title = :title ", {title: title});
+    if (title) query.andWhere("destination.title = :title ", { title: title });
   };
   static PRICE_FILTER = function (
-      price,
+    price,
     query: SelectQueryBuilder<Destination>
   ) {
     if (price) query.andWhere("destination.price = :price ", { price: price });

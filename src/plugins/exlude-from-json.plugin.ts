@@ -4,7 +4,7 @@ export function excludeProperty(
   firstExcludedListName?: string,
   secondExcludedListName?: string,
   thirdExcludedListName?: string,
-  fourthExcludedListName?: string,
+  fourthExcludedListName?: string
 ) {
   const {
     [excludedFieldName]: excludedProperty,

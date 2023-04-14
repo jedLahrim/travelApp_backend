@@ -22,71 +22,71 @@ import { Attachment } from "../../entities/attachment.entity";
 import { In } from "typeorm";
 const router = express.Router();
 router.post(
-    "/api/destination/create",
-    body("title").isString().withMessage("name must be string"),
-    body("price").isInt().withMessage("price must be number"),
-    body("requiredNumberTravelers")
-        .isInt()
-        .withMessage("requiredNumberTravelers must be number"),
-    body("endDate")
-        .matches(Constant.DATE_PATTERN)
-        .withMessage("endDate must be in correct format yyyy:mm:dd hh:mm:ss"),
-    body("startDate")
-        .matches(Constant.DATE_PATTERN)
-        .withMessage("startDate must be in correct format yyyy:mm:dd hh:mm:ss"),
-    body("long").isDecimal().withMessage("long must be a valid longitude"),
-    body("lat").isDecimal().withMessage("lat must be a latitude"),
-    body("category").custom((category, {req}) => {
-        if (!Object.values(CategoryType).includes(category.name)) {
-            throw new Error("put a valid category type");
-        }
-        return true;
-    }),
-    checkValidationErrors,
-    authGuard,
-    async (req, res) => {
-        const user = await GetUser(req);
-        if (!user) {
-            res.json(new AppError(ERR_NOT_FOUND_USER));
-        } else {
-            const {
-                title,
-                price,
-                description,
-                startDate,
-                endDate,
-                requiredNumberTravelers,
-                long,
-                lat,
-                category,
-                primaryAttachment,
-                maxTravelers,
-                attachments,
-            } = req.body;
-            if (
-                _checkFields(
-                    startDate,
-                    endDate,
-                    maxTravelers,
-                    requiredNumberTravelers,
-                    res
-                )
-            ) {
-            } else {
-                const foundedCategory = Category.create({name: category.name});
+  "/api/destination/create",
+  body("title").isString().withMessage("name must be string"),
+  body("price").isInt().withMessage("price must be number"),
+  body("requiredNumberTravelers")
+    .isInt()
+    .withMessage("requiredNumberTravelers must be number"),
+  body("endDate")
+    .matches(Constant.DATE_PATTERN)
+    .withMessage("endDate must be in correct format yyyy:mm:dd hh:mm:ss"),
+  body("startDate")
+    .matches(Constant.DATE_PATTERN)
+    .withMessage("startDate must be in correct format yyyy:mm:dd hh:mm:ss"),
+  body("long").isDecimal().withMessage("long must be a valid longitude"),
+  body("lat").isDecimal().withMessage("lat must be a latitude"),
+  body("category").custom((category, { req }) => {
+    if (!Object.values(CategoryType).includes(category.name)) {
+      throw new Error("put a valid category type");
+    }
+    return true;
+  }),
+  checkValidationErrors,
+  authGuard,
+  async (req, res) => {
+    const user = await GetUser(req);
+    if (!user) {
+      res.json(new AppError(ERR_NOT_FOUND_USER));
+    } else {
+      const {
+        title,
+        price,
+        description,
+        startDate,
+        endDate,
+        requiredNumberTravelers,
+        long,
+        lat,
+        category,
+        primaryAttachment,
+        maxTravelers,
+        attachments,
+      } = req.body;
+      if (
+        _checkFields(
+          startDate,
+          endDate,
+          maxTravelers,
+          requiredNumberTravelers,
+          res
+        )
+      ) {
+      } else {
+        const foundedCategory = Category.create({ name: category.name });
         await Category.save(foundedCategory);
         let destination = Destination.create({
-            lat: lat,
-            long: long,
-            title,
-            price: price,
-            description,
-            startDate,
-            endDate,
-            requiredNumberTravelers,
-            category: foundedCategory,
-            maxTravelers,
-            user: {id: user.id},
+          lat: lat,
+          long: long,
+          title,
+          price: price,
+          description,
+          startDate,
+          endDate,
+          requiredNumberTravelers,
+          category: foundedCategory,
+          maxTravelers,
+          user: { id: user.id },
         });
         if (attachments) {
           await _saveAttachment(
@@ -142,41 +142,41 @@ async function _saveAttachment(
   }
 }
 router.get(
-    "/api/destinations",
-    query("title")
-        .optional({nullable: true})
-        .isString()
-        .withMessage("title must be string"),
-    query("price")
-        .optional({nullable: true})
-        .isInt()
-        .withMessage("price must be number"),
-    query("take")
-        .optional({nullable: true})
-        .isInt()
-        .withMessage("take must be number"),
-    query("skip")
-        .optional({nullable: true})
-        .isInt()
-        .withMessage("skip must be number"),
-    check("category")
-        .optional({nullable: true})
-        .isIn(Object.values(CategoryType))
-        .withMessage("Invalid category type"),
-    checkValidationErrors,
-    authGuard,
-    async (req, res) => {
-        const {title, price, take, skip, category} = req.query;
-        const query = Destination.createQueryBuilder("destination");
-        await Filter.CATEGORY_FILTER(category, query);
-        Filter.TITLE_FILTER(title, query);
-        Filter.PRICE_FILTER(price, query);
-        query.take(+take ? +take : Constant.TAKE);
-        query.skip(+skip ? +skip : Constant.SKIP);
-        const [data, total] = await query.getManyAndCount();
-        const destinations = new Pagination<Destination>(data, total);
-        res.json(destinations);
-    }
+  "/api/destinations",
+  query("title")
+    .optional({ nullable: true })
+    .isString()
+    .withMessage("title must be string"),
+  query("price")
+    .optional({ nullable: true })
+    .isInt()
+    .withMessage("price must be number"),
+  query("take")
+    .optional({ nullable: true })
+    .isInt()
+    .withMessage("take must be number"),
+  query("skip")
+    .optional({ nullable: true })
+    .isInt()
+    .withMessage("skip must be number"),
+  check("category")
+    .optional({ nullable: true })
+    .isIn(Object.values(CategoryType))
+    .withMessage("Invalid category type"),
+  checkValidationErrors,
+  authGuard,
+  async (req, res) => {
+    const { title, price, take, skip, category } = req.query;
+    const query = Destination.createQueryBuilder("destination");
+    await Filter.CATEGORY_FILTER(category, query);
+    Filter.TITLE_FILTER(title, query);
+    Filter.PRICE_FILTER(price, query);
+    query.take(+take ? +take : Constant.TAKE);
+    query.skip(+skip ? +skip : Constant.SKIP);
+    const [data, total] = await query.getManyAndCount();
+    const destinations = new Pagination<Destination>(data, total);
+    res.json(destinations);
+  }
 );
 router.get("/api/destination/:id", authGuard, async (req, res) => {
   const { id } = req.params;
@@ -184,59 +184,59 @@ router.get("/api/destination/:id", authGuard, async (req, res) => {
   res.json(destination);
 });
 router.patch(
-    "/api/destination/update/:id",
-    authGuard,
-    body("title").isString().withMessage("name must be string"),
-    body("price").isInt().withMessage("price must be number"),
-    body("requiredNumberTravelers")
-        .isInt()
-        .withMessage("requiredNumberTravelers must be number"),
-    body("endDate")
-        .matches(Constant.DATE_PATTERN)
-        .withMessage("endDate must be in correct format yyyy:mm:dd hh:mm:ss"),
-    body("startDate")
-        .matches(Constant.DATE_PATTERN)
-        .withMessage("startDate must be in correct format yyyy:mm:dd hh:mm:ss"),
-    body("description").isString().withMessage("description must be string"),
-    body("long").isDecimal().withMessage("long must be a valid longitude"),
-    body("lat").isDecimal().withMessage("lat must be a latitude"),
-    body("category").custom((category, {req}) => {
-        if (!Object.values(CategoryType).includes(category.name)) {
-            throw new Error("put a valid category type");
-        }
-        return true;
-    }),
-    checkValidationErrors,
-    async (req, res) => {
-        const {id} = req.params;
-        const user = await GetUser(req);
-        const {
-            title,
-            price,
-            description,
-            long,
-            lat,
-            category,
-            primaryAttachment,
-            attachments,
-            startDate,
-            endDate,
-            requiredNumberTravelers,
-            joinedNumberParticipants,
-            maxTravelers,
-        } = req.body;
-        if (
-            _checkFields(
-                startDate,
-                endDate,
-                maxTravelers,
-                requiredNumberTravelers,
-                res
-            )
-        ) {
-        } else {
-            const foundedCategory = await Category.findOne({
-                where: {name: category.name},
+  "/api/destination/update/:id",
+  authGuard,
+  body("title").isString().withMessage("name must be string"),
+  body("price").isInt().withMessage("price must be number"),
+  body("requiredNumberTravelers")
+    .isInt()
+    .withMessage("requiredNumberTravelers must be number"),
+  body("endDate")
+    .matches(Constant.DATE_PATTERN)
+    .withMessage("endDate must be in correct format yyyy:mm:dd hh:mm:ss"),
+  body("startDate")
+    .matches(Constant.DATE_PATTERN)
+    .withMessage("startDate must be in correct format yyyy:mm:dd hh:mm:ss"),
+  body("description").isString().withMessage("description must be string"),
+  body("long").isDecimal().withMessage("long must be a valid longitude"),
+  body("lat").isDecimal().withMessage("lat must be a latitude"),
+  body("category").custom((category, { req }) => {
+    if (!Object.values(CategoryType).includes(category.name)) {
+      throw new Error("put a valid category type");
+    }
+    return true;
+  }),
+  checkValidationErrors,
+  async (req, res) => {
+    const { id } = req.params;
+    const user = await GetUser(req);
+    const {
+      title,
+      price,
+      description,
+      long,
+      lat,
+      category,
+      primaryAttachment,
+      attachments,
+      startDate,
+      endDate,
+      requiredNumberTravelers,
+      joinedNumberParticipants,
+      maxTravelers,
+    } = req.body;
+    if (
+      _checkFields(
+        startDate,
+        endDate,
+        maxTravelers,
+        requiredNumberTravelers,
+        res
+      )
+    ) {
+    } else {
+      const foundedCategory = await Category.findOne({
+        where: { name: category.name },
       });
       const updateResult = await Destination.update(
         { id },

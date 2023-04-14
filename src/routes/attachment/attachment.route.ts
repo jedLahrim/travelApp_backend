@@ -42,8 +42,8 @@ router.post(
           name: name ?? key,
           url: sendData.Location,
         });
-       await Attachment.save(attachment)
-        res.json(attachment)
+        await Attachment.save(attachment);
+        res.json(attachment);
       }
     } catch (err) {
       res.status(500).send(err);

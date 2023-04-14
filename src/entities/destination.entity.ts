@@ -28,7 +28,7 @@ export class Destination extends BaseEntity {
 
   @Column()
   title: string;
-  @Column({type: "integer"})
+  @Column({ type: "integer" })
   price: number;
   @Column()
   description: string;

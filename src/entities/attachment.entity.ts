@@ -1,5 +1,11 @@
-import {BaseEntity, Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
-import {Destination} from "./destination.entity";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from "typeorm";
+import { Destination } from "./destination.entity";
 
 @Entity()
 export class Attachment extends BaseEntity {
