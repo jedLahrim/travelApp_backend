@@ -1,7 +1,7 @@
 import express, { Response } from "express";
-import { authGuard } from "../../jwt/jwt.strategy";
-import { checkValidationErrors } from "../../validation/validation.errors";
-import { Destination } from "../../entities/destination.entity";
+import {authGuard} from "../../jwt/jwt.strategy";
+import {checkValidationErrors} from "../../validation/validation.errors";
+import {Destination} from "../../entities/destination.entity";
 import {
   ERR_DESTINATION_NOT_ALLOWED_TO_ORDER,
   ERR_NOT_FOUND_DESTINATIONS,
@@ -37,16 +37,16 @@ router.post(
       if (!destination) return res.json(new AppError(ERR_NOT_FOUND_DESTINATIONS));
 
       try {
-      const session = await _getStripeSession(
-        destination,
-        user,
-        successUrl,
-        cancelUrl,
-        res
-      );
-      if (!session) {
-      } else {
-        const publishable_key = (await process.env
+        const session = await _getStripeSession(
+            destination,
+            user,
+            successUrl,
+            cancelUrl,
+            res
+        );
+        if (!session) {
+        } else {
+          const publishable_key = (await process.env
           .STRIPE_PUBLISHABLE_KEY) as string;
 
         return res.json({
@@ -180,16 +180,16 @@ router.post(
         relations: {user: true, destination: true},
         where: {
           id: orderId,
-        user: {
-          id: user.id,
+          user: {
+            id: user.id,
+          },
         },
-      },
-    });
-    if (!order) {
-      return res.json(new AppError(ERR_NOT_FOUND_ORDER));
-    }
+      });
+      if (!order) {
+        return res.json(new AppError(ERR_NOT_FOUND_ORDER));
+      }
 
-    await _checkOrderRefund(order, reason, res);
+      await _checkOrderRefund(order, reason, res);
   }
 );
 async function _checkOrderRefund(order: Order, reason: string, res: Response) {
