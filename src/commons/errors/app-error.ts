@@ -1,4 +1,4 @@
-import { Matches, ValidationOptions } from 'class-validator';
+import { Matches, ValidationOptions } from "class-validator";
 
 export class AppError {
   code: string;
@@ -21,15 +21,15 @@ export class CustomMatches {
 }
 
 new CustomMatches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-  message: 'password is too weak',
-  mes: '',
+  message: "password is too weak",
+  mes: "",
 });
 
 export const CustomMatches1 = (
   pattern: RegExp,
-  validationOptions?: ValidationOptions,
+  validationOptions?: ValidationOptions
 ) => {
   validationOptions = {};
-  validationOptions.message = 'Message';
+  validationOptions.message = "Message";
   return Matches(pattern, validationOptions);
 };

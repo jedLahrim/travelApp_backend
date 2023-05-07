@@ -1,12 +1,11 @@
 import express from "express";
 import { authGuard } from "../../jwt/jwt.strategy";
 import { upload } from "../../upload/upload.file.multer";
-import process from "process";
 import { v4 as uuid } from "uuid";
 import { Attachment } from "../../entities/attachment.entity";
 import { S3 } from "aws-sdk";
 import { PutObjectCommandInput } from "@aws-sdk/client-s3";
-
+import * as okrabyte from "okrabyte";
 const router = express.Router();
 router.post(
   "/api/attachment/upload",
@@ -18,24 +17,8 @@ router.post(
       if (!file) {
         res.status(400).send("No file uploaded.");
       } else {
-        const bucket = process.env.AWS_BACKET_NAME;
-        const accessKeyId = process.env.AWS_ACCESS_KEY;
-        const secretAccessKey = process.env.AWS_SECRET_KEY;
         const key = `${uuid()}-${file.originalname}`;
-        const awsFile: PutObjectCommandInput = {
-          Body: file.buffer,
-          Bucket: bucket,
-          Key: key,
-          ContentType: file.mimetype,
-          ACL: "public-read",
-        };
-        const s3 = new S3({
-          credentials: {
-            accessKeyId: accessKeyId,
-            secretAccessKey: secretAccessKey,
-          },
-        });
-        const sendData = await s3.upload(awsFile).promise();
+        const sendData = await uploadAws(file, key);
         // save attachment after upload
         const { name } = req.body;
         const attachment = Attachment.create({
@@ -50,5 +33,32 @@ router.post(
     }
   }
 );
+export async function uploadAws(file: Express.Multer.File, key) {
+  const awsFile: PutObjectCommandInput = {
+    Body: file.buffer,
+    Bucket: process.env.AWS_BACKET_NAME,
+    Key: key,
+    ContentType: file?.mimetype,
+    // ACL: "public-read",
+  };
+  const s3 = new S3({
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY,
+      secretAccessKey: process.env.AWS_SECRET_KEY,
+    },
+  });
+  return await s3.upload(awsFile).promise();
+}
+router.get("/api/readFile/get", upload.single("file"), async (req, res) => {
+  try {
+    okrabyte.decodeBuffer(req.file.buffer, (error, data) => {
+      console.log(data);
+      const text = data.replace(/\n/g, "");
+      res.json({ text: text });
+    });
+  } catch (e) {
+    res.json({ err: e });
+  }
+});
 
 export { router as attachmentRoute };

@@ -49,7 +49,7 @@ export class Filter {
       query
         .innerJoinAndSelect("category", "c2", "destination.categoryId=c2.id")
         .andWhere("destination.categoryId= :categoryId ", {
-          categoryId: foundedCategory.id,
+          categoryId: foundedCategory ? foundedCategory.id : null,
         });
     }
   };

@@ -43,7 +43,7 @@ router.post(
       await User.save(user);
       res.json();
     } catch (e: Error) {
-      if (e.code == "23505") {
+      if (e.code == "ER_DUP_ENTRY" || "23505") {
         res.json(new AppError(ERR_EMAIL_ALREADY_EXIST));
       }
     }
@@ -93,6 +93,6 @@ function _getUserWithTokens(user: User) {
   user.refreshExpireAt = refreshExpireAt;
   return user;
 }
-function generateToken(payload: any, expiresIn: number) {
+export function generateToken(payload: any, expiresIn: number) {
   return jwt.sign(payload, "jedJlxSecret2023", { expiresIn: expiresIn });
 }

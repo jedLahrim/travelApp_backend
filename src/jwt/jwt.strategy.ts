@@ -13,7 +13,7 @@ export async function authGuard(req, res, next: NextFunction) {
   const bearerToken = bearer[1];
   try {
     const secretKey = process.env.SECRET_KEY;
-    const decoded: any = jwt.verify(bearerToken, secretKey);
+    const decoded = jwt.verify(bearerToken, secretKey);
     req.user = decoded;
     next();
   } catch (error) {

@@ -6,7 +6,7 @@ import { authGuard } from "../../jwt/jwt.strategy";
 import { ERR_NOT_FOUND_DESTINATIONS } from "../../commons/errors/errors-codes";
 import { AppError } from "../../commons/errors/app-error";
 import { GetUser } from "../../decorator/get-user.decorator";
-import { getRepository } from "typeorm";
+import { appDataSource } from "../../app";
 
 const router = express.Router();
 router.post(
@@ -52,7 +52,7 @@ router.delete(
   "/api/favourite/delete/:id",
   authGuard,
   async (req: Request, res) => {
-    const repo = getRepository(Favourite);
+    const repo = appDataSource.getRepository(Favourite);
     let { id } = req.params;
     const result = await repo.softDelete(id);
     console.log(result);
