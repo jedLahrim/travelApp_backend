@@ -17,7 +17,7 @@ export class Constant {
   };
   static randomCode: any = Math.floor(Math.random() * 100000 + 1);
   static resetRandomCode: any = Math.floor(Math.random() * 100000 + 1);
-
+  static OUTPUT_TYPE = "audio_url";
   static resetString = Constant.ResetCodeString(7);
   static TAKE = 40;
   static SKIP = 0;

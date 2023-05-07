@@ -3,7 +3,7 @@ import { body } from "express-validator";
 import { Request, Response } from "express";
 import sha256 from "sha256";
 import * as jwt from "jsonwebtoken";
-import { checkValidationErrors } from "../../validation/validation.errors";
+import { CheckValidationErrors } from "../../validation/validation.errors";
 import { User } from "../../entities/user.entity";
 import {
   EMAIL_OR_PASSWORD_IS_INCORRECT,
@@ -30,7 +30,7 @@ router.post(
     })
     .withMessage("password must be a strong password"),
   body("email").isEmail().withMessage("email must be an email"),
-  checkValidationErrors,
+  CheckValidationErrors,
   async (req: Request, res: Response) => {
     const { email, fullName, password } = req.body;
     const hashedPassword = sha256(password);
@@ -53,7 +53,7 @@ router.post(
   "/api/login",
   body("password").isString().withMessage("last_name must be string"),
   body("email").isEmail().withMessage("email must be an email"),
-  checkValidationErrors,
+  CheckValidationErrors,
   async (req: Request, res: Response) => {
     const { email, password } = req.body;
     const user = await User.findOne({

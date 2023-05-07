@@ -1,6 +1,6 @@
 import express, { Response } from "express";
 import { authGuard } from "../../jwt/jwt.strategy";
-import { checkValidationErrors } from "../../validation/validation.errors";
+import { CheckValidationErrors } from "../../validation/validation.errors";
 import { Destination } from "../../entities/destination.entity";
 import {
   ERR_DESTINATION_NOT_ALLOWED_TO_ORDER,
@@ -29,7 +29,7 @@ router.use((req, res, next) => {
 router.post(
   "/api/stripe/create_checkout",
   authGuard,
-  checkValidationErrors,
+  CheckValidationErrors,
   async (req, res) => {
     const { destinationId, successUrl, cancelUrl } = req.body;
     const user = await GetUser(req);
@@ -171,7 +171,7 @@ router.post("/api/stripe/free_order", authGuard, async (req, res) => {
 });
 router.post(
   "/api/stripe/refund",
-  checkValidationErrors,
+  CheckValidationErrors,
   authGuard,
   async (req, res) => {
     const { orderId, reason } = req.body;

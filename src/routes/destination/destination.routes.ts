@@ -1,5 +1,5 @@
 import { body, query, check } from "express-validator";
-import { checkValidationErrors } from "../../validation/validation.errors";
+import { CheckValidationErrors } from "../../validation/validation.errors";
 import express from "express";
 import { Destination } from "../../entities/destination.entity";
 import { authGuard } from "../../jwt/jwt.strategy";
@@ -42,7 +42,7 @@ router.post(
     }
     return true;
   }),
-  checkValidationErrors,
+  CheckValidationErrors,
   authGuard,
   async (req, res) => {
     const user = await GetUser(req);
@@ -163,7 +163,7 @@ router.get(
     .optional({ nullable: true })
     .isIn(Object.values(CategoryType))
     .withMessage("Invalid category type"),
-  checkValidationErrors,
+  CheckValidationErrors,
   authGuard,
   async (req, res) => {
     const { title, price, take, skip, category } = req.query;
@@ -206,7 +206,7 @@ router.patch(
     }
     return true;
   }),
-  checkValidationErrors,
+  CheckValidationErrors,
   async (req, res) => {
     const { id } = req.params;
     const user = await GetUser(req);

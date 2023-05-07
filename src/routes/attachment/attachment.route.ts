@@ -6,6 +6,11 @@ import { Attachment } from "../../entities/attachment.entity";
 import { S3 } from "aws-sdk";
 import { PutObjectCommandInput } from "@aws-sdk/client-s3";
 import * as okrabyte from "okrabyte";
+import axios from "axios";
+import { Constant } from "../../commons/constant";
+import { VoiceCode } from "../../commons/enums/voice-code.enum";
+import { body } from "express-validator";
+import { CheckValidationErrors } from "../../validation/validation.errors";
 const router = express.Router();
 router.post(
   "/api/attachment/upload",
@@ -61,4 +66,83 @@ router.get("/api/readFile/get", upload.single("file"), async (req, res) => {
   }
 });
 
+router.post(
+  "/api/readAudioFile/get",
+  body("language").custom((language, { req }) => {
+    if (!Object.values(VoiceCode).includes(language)) {
+      throw new Error("put a valid language like: ENGLISH, SPANISH or ARABIC");
+    }
+    return true;
+  }),
+  body("text")
+    .notEmpty({ ignore_whitespace: true })
+    .withMessage("text cannot be empty")
+    .isString()
+    .withMessage("put a valid text to give you the speech for it"),
+  body("speed")
+    .isFloat({
+      min: Number.MIN_SAFE_INTEGER,
+      max: Number.MAX_SAFE_INTEGER,
+      gt: 0,
+      lt: 3,
+    })
+    .withMessage("invalid speaking speed, must be from 0.00 to 3.00'"),
+  body("pitch")
+    .isFloat({
+      min: Number.MIN_SAFE_INTEGER,
+      max: Number.MAX_SAFE_INTEGER,
+      gt: 0,
+      lt: 2,
+    })
+    .withMessage("invalid pitch, must be from 0.00 to 2.00'"),
+  CheckValidationErrors,
+  async (req, res) => {
+    let { language, text, speed, pitch } = req.body;
+    let voiceCode: string;
+    switch (language) {
+      case VoiceCode.ENGLISH:
+        voiceCode = "en-US-1";
+        break;
+      case VoiceCode.SPANISH:
+        voiceCode = "es-ES-1";
+        break;
+      case VoiceCode.ARABIC:
+        voiceCode = "ar-SA-1";
+        break;
+    }
+    let encodedParams = generateEncodedParams(voiceCode, text, speed, pitch);
+    const options = {
+      method: "POST",
+      url: "https://cloudlabs-text-to-speech.p.rapidapi.com/synthesize",
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+        "X-RapidAPI-Key": "f8c602e5admshbd82158c8de91d2p13fc1djsn5f711a3baff5",
+        "X-RapidAPI-Host": "cloudlabs-text-to-speech.p.rapidapi.com",
+      },
+      data: encodedParams,
+    };
+
+    try {
+      const response = await axios.request(options);
+      console.log(response.data);
+      res.json(response.data.result);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+);
+export function generateEncodedParams(
+  voiceCode: string,
+  text: string,
+  speed: string,
+  pitch: string
+) {
+  const encodedParams = new URLSearchParams();
+  encodedParams.set("voice_code", voiceCode);
+  encodedParams.set("text", text);
+  encodedParams.set("speed", speed);
+  encodedParams.set("pitch", pitch);
+  encodedParams.set("output_type", Constant.OUTPUT_TYPE);
+  return encodedParams;
+}
 export { router as attachmentRoute };
