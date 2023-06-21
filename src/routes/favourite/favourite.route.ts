@@ -1,4 +1,4 @@
-import { CheckValidationErrors } from "../../validation/validation.errors";
+import { ValidationErrors } from "../../validation/validation.errors";
 import express, { Request, Response } from "express";
 import { Destination } from "../../entities/destination.entity";
 import { Favourite } from "../../entities/favourite.entity";
@@ -11,7 +11,7 @@ import { appDataSource } from "../../app";
 const router = express.Router();
 router.post(
   "/api/favourite/create",
-  CheckValidationErrors,
+  ValidationErrors,
   authGuard,
   async (req: Request, res: Response) => {
     const body = req.body;

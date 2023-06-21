@@ -1,5 +1,5 @@
 import { body, query, check } from "express-validator";
-import { CheckValidationErrors } from "../../validation/validation.errors";
+import { ValidationErrors } from "../../validation/validation.errors";
 import express from "express";
 import { Destination } from "../../entities/destination.entity";
 import { authGuard } from "../../jwt/jwt.strategy";
@@ -42,7 +42,7 @@ router.post(
     }
     return true;
   }),
-  CheckValidationErrors,
+  ValidationErrors,
   authGuard,
   async (req, res) => {
     const user = await GetUser(req);
@@ -147,7 +147,7 @@ router.get(
     .optional({ nullable: true })
     .isString()
     .withMessage("title must be string"),
-  query("price")
+  query("maxPrice")
     .optional({ nullable: true })
     .isInt()
     .withMessage("price must be number"),
@@ -163,14 +163,14 @@ router.get(
     .optional({ nullable: true })
     .isIn(Object.values(CategoryType))
     .withMessage("Invalid category type"),
-  CheckValidationErrors,
+  ValidationErrors,
   authGuard,
   async (req, res) => {
-    const { title, price, take, skip, category } = req.query;
+    const { title, maxPrice, minPrice, take, skip, category } = req.query;
     const query = Destination.createQueryBuilder("destination");
     await Filter.CATEGORY_FILTER(category, query);
     Filter.TITLE_FILTER(title, query);
-    Filter.PRICE_FILTER(price, query);
+    Filter.PRICE_FILTER(maxPrice, minPrice, query);
     query.take(+take ? +take : Constant.TAKE);
     query.skip(+skip ? +skip : Constant.SKIP);
     const [data, total] = await query.getManyAndCount();
@@ -206,7 +206,7 @@ router.patch(
     }
     return true;
   }),
-  CheckValidationErrors,
+  ValidationErrors,
   async (req, res) => {
     const { id } = req.params;
     const user = await GetUser(req);

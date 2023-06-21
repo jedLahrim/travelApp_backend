@@ -10,7 +10,9 @@ import {
 import { Exclude } from "class-transformer";
 import { IsString, Matches, MaxLength, MinLength } from "class-validator";
 import { Destination } from "./destination.entity";
-import { excludeProperty } from "../plugins/exlude-from-json.plugin";
+import {
+  excludeProperties,
+} from "../plugins/exlude-from-json.plugin";
 import { Favourite } from "./favourite.entity";
 import { Order } from "./order.entity";
 import { StripeIntent } from "./stripe-intent.entity";
@@ -67,13 +69,12 @@ export class User extends BaseEntity {
   })
   stripeIntents: StripeIntent[];
   toJSON() {
-    return excludeProperty(
-      this,
+    return excludeProperties(this, [
       "password",
       "destinations",
       "favourites",
       "orders",
-      "stripeIntents"
-    );
+      "stripeIntents",
+    ]);
   }
 }

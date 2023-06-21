@@ -11,7 +11,7 @@ import {
 import { Destination } from "./destination.entity";
 import { Exclude } from "class-transformer";
 import { User } from "./user.entity";
-import { excludeProperty } from "../plugins/exlude-from-json.plugin";
+import {excludeProperties} from "../plugins/exlude-from-json.plugin";
 @Entity()
 export class Favourite extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
@@ -34,6 +34,6 @@ export class Favourite extends BaseEntity {
   @Exclude()
   user: User;
   toJSON() {
-    return excludeProperty(this, null, "user");
+    return excludeProperties(this,['user'])
   }
 }

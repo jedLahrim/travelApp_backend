@@ -16,7 +16,7 @@ import { Favourite } from "./favourite.entity";
 import { Exclude } from "class-transformer";
 import { Category } from "./category.entity";
 import { Order } from "./order.entity";
-import { excludeProperty } from "../plugins/exlude-from-json.plugin";
+import {excludeProperties} from "../plugins/exlude-from-json.plugin";
 import { Attachment } from "./attachment.entity";
 import { StripeIntent } from "./stripe-intent.entity";
 import { IsOptional } from "class-validator";
@@ -101,13 +101,7 @@ export class Destination extends BaseEntity {
   )
   stripeIntents: StripeIntent[];
   toJSON() {
-    return excludeProperty(
-      this,
-      null,
-      "orders",
-      "attachments",
-      "stripeIntents"
-    );
+return excludeProperties(this,['stripeIntents','attachments','orders'])
   }
 
   get isAllowedToOrder(): boolean {

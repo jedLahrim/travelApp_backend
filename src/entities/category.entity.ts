@@ -8,7 +8,7 @@ import {
 import { CategoryType } from "../commons/enums/category-type";
 import { Destination } from "./destination.entity";
 import { Exclude } from "class-transformer";
-import { excludeProperty } from "../plugins/exlude-from-json.plugin";
+import {excludeProperties} from "../plugins/exlude-from-json.plugin";
 
 @Entity()
 export class Category extends BaseEntity {
@@ -24,6 +24,6 @@ export class Category extends BaseEntity {
   @Exclude()
   destinations: Destination[];
   toJSON() {
-    return excludeProperty(this, null, "destinations");
+    return excludeProperties(this,['destinations'])
   }
 }

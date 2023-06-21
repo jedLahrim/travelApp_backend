@@ -20,11 +20,14 @@ import { orderRoute } from "./routes/order/order.route";
 import { translationRouter } from "./routes/translation/translation.route";
 import { notificationRouter } from "./routes/notification/notifications.route";
 import { archiveRouter } from "./routes/archive/archive.route";
+import { mapRoute } from "./routes/map/map.route";
+import { twilioRouter } from "./routes/twilio/twilio.routes";
 dotenv.config({ path: ".env", debug: true });
 export const appDataSource = new DataSource({
-  type: "mysql",
+  useUTC: true,
+  type: "postgres",
   host: process.env.HOST,
-  port: 3306,
+  port: 5432,
   username: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DATABASE,
@@ -51,6 +54,7 @@ appDataSource
     console.log("database connected");
     const routes = [
       userRoute,
+      mapRoute,
       destinationRoute,
       favouriteRoute,
       categoryRoute,
@@ -59,11 +63,12 @@ appDataSource
       translationRouter,
       notificationRouter,
       archiveRouter,
+      twilioRouter,
     ];
     routes.forEach((router) => {
       app.use(router);
     });
-    app.listen(3001, (): void => {
+    app.listen("3001", (): void => {
       console.log("Server Running!");
     });
   })

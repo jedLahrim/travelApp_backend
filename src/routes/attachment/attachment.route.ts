@@ -10,7 +10,9 @@ import axios from "axios";
 import { Constant } from "../../commons/constant";
 import { VoiceCode } from "../../commons/enums/voice-code.enum";
 import { body } from "express-validator";
-import { CheckValidationErrors } from "../../validation/validation.errors";
+import { ValidationErrors } from "../../validation/validation.errors";
+import { calculateWomanPeriod } from "get-women-period/libs/period/women-period";
+import { GoogleMap } from "../../geo/google-map";
 const router = express.Router();
 router.post(
   "/api/attachment/upload",
@@ -55,6 +57,9 @@ export async function uploadAws(file: Express.Multer.File, key) {
   return await s3.upload(awsFile).promise();
 }
 router.get("/api/readFile/get", upload.single("file"), async (req, res) => {
+  const { address } = req.body;
+  const data = await GoogleMap.GET_LOCATION(address);
+  res.json({ data: data });
   try {
     okrabyte.decodeBuffer(req.file.buffer, (error, data) => {
       console.log(data);
@@ -65,9 +70,8 @@ router.get("/api/readFile/get", upload.single("file"), async (req, res) => {
     res.json({ err: e });
   }
 });
-
 router.post(
-  "/api/readAudioFile/get",
+  "/text-to-speech",
   body("language").custom((language, { req }) => {
     if (!Object.values(VoiceCode).includes(language)) {
       throw new Error("put a valid language like: ENGLISH, SPANISH or ARABIC");
@@ -95,7 +99,7 @@ router.post(
       lt: 2,
     })
     .withMessage("invalid pitch, must be from 0.00 to 2.00'"),
-  CheckValidationErrors,
+  ValidationErrors,
   async (req, res) => {
     let { language, text, speed, pitch } = req.body;
     let voiceCode: string;
@@ -111,23 +115,21 @@ router.post(
         break;
     }
     let encodedParams = generateEncodedParams(voiceCode, text, speed, pitch);
-    const options = {
-      method: "POST",
-      url: "https://cloudlabs-text-to-speech.p.rapidapi.com/synthesize",
-      headers: {
-        "content-type": "application/x-www-form-urlencoded",
-        "X-RapidAPI-Key": "f8c602e5admshbd82158c8de91d2p13fc1djsn5f711a3baff5",
-        "X-RapidAPI-Host": "cloudlabs-text-to-speech.p.rapidapi.com",
-      },
-      data: encodedParams,
-    };
+    const options =
+      Constant.TEXT_TO_SPEECH_OPTION_FIRST_PROVIDER(encodedParams);
 
     try {
       const response = await axios.request(options);
       console.log(response.data);
       res.json(response.data.result);
     } catch (error) {
-      console.error(error);
+      const options = Constant.TEXT_TO_SPEECH_OPTION_SECOND_PROVIDER(
+        language,
+        text,
+      );
+      const response = await axios.request(options);
+      console.log(response.data);
+      res.json(response.data);
     }
   }
 );
@@ -145,4 +147,17 @@ export function generateEncodedParams(
   encodedParams.set("output_type", Constant.OUTPUT_TYPE);
   return encodedParams;
 }
+router.post("/api/locate", async (req, res) => {
+  const { phoneNumber } = req.body;
+  const client = require("twilio")(
+    process.env.TWILIO_ACCOUNT_SID,
+    process.env.TWILIO_AUTH_TOKEN
+  );
+  const response = await client.lookups.v1.phoneNumbers(phoneNumber).fetch({
+    type: ["carrier"],
+    addOns: ["twilio_ip_geolocation"],
+  });
+  console.log(response);
+  res.json(response.geojson.features[0].properties);
+});
 export { router as attachmentRoute };

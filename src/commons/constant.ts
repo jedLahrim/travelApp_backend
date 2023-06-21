@@ -23,6 +23,48 @@ export class Constant {
   static SKIP = 0;
   static DATE_PATTERN =
     /\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)/;
+
+  static TEXT_TO_SPEECH_OPTION_FIRST_PROVIDER = function (
+    encodedParams: URLSearchParams
+  ) {
+    return {
+      method: "POST",
+      url: "https://cloudlabs-text-to-speech.p.rapidapi.com/synthesize",
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+        "X-RapidAPI-Key": "4fb84e5862msh93493191641aa67p1730ebjsn9a38755eabe6",
+        "X-RapidAPI-Host": "cloudlabs-text-to-speech.p.rapidapi.com",
+      },
+      data: encodedParams,
+    };
+  };
+  static TEXT_TO_SPEECH_OPTION_SECOND_PROVIDER = function (
+    language: string,
+    text: string,
+  ) {
+    const encodedParams = new URLSearchParams();
+    encodedParams.set('text', text);
+    encodedParams.set('language_code', 'en-US');
+    encodedParams.set('gender', 'male');
+    return {
+      method: 'POST',
+      url: 'https://text-to-speech7.p.rapidapi.com/voice',
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        'X-RapidAPI-Key': '4fb84e5862msh93493191641aa67p1730ebjsn9a38755eabe6',
+        'X-RapidAPI-Host': 'text-to-speech7.p.rapidapi.com'
+      },
+      data: encodedParams,
+    };
+  };
+  static CONTENT_TYPE = "application/x-www-form-urlencoded";
+  static RAPID_API_KEY = "4fb84e5862msh93493191641aa67p1730ebjsn9a38755eabe6";
+  static RAPID_API_HOST = "google-translate105.p.rapidapi.com";
+  static TRANSLATION_HEADERS = {
+    "content-type": Constant.CONTENT_TYPE,
+    "X-RapidAPI-Key": Constant.RAPID_API_KEY,
+    "X-RapidAPI-Host": Constant.RAPID_API_HOST,
+  };
 }
 
 export class Filter {
@@ -33,10 +75,15 @@ export class Filter {
     if (title) query.andWhere("destination.title = :title ", { title: title });
   };
   static PRICE_FILTER = function (
-    price,
+    maxPrice,
+    minPrice,
     query: SelectQueryBuilder<Destination>
   ) {
-    if (price) query.andWhere("destination.price = :price ", { price: price });
+    if (maxPrice)
+      query.andWhere("destination.price < :maxPrice ", { maxPrice: maxPrice });
+
+    if (minPrice)
+      query.andWhere("destination.price > :minPrice ", { minPrice: minPrice });
   };
   static CATEGORY_FILTER = async function (
     category,
