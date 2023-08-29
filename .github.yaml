@@ -4,7 +4,7 @@ name: Security Pipeline
 on:
   push:
     branches:
-      - master
+      - origin/master
 
 jobs:
   security_checks:
