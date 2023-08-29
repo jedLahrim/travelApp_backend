@@ -22,6 +22,11 @@ import { notificationRouter } from "./routes/notification/notifications.route";
 import { archiveRouter } from "./routes/archive/archive.route";
 import { mapRoute } from "./routes/map/map.route";
 import { twilioRouter } from "./routes/twilio/twilio.routes";
+import rateLimit from "express-rate-limit";
+import { createServer, plugins } from "restify";
+import * as Hapi from "@hapi/hapi";
+import * as dgram from "dgram";
+import {initMysql2} from "./sql/connection/sql-connection";
 dotenv.config({ path: ".env", debug: true });
 export const appDataSource = new DataSource({
   useUTC: true,
@@ -46,8 +51,46 @@ export const appDataSource = new DataSource({
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+// Apply rate limiting to all requests
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Max number of requests
+});
+app.use(limiter);
 // use cors
 app.use(cors());
+// initDataGram()
+initMysql2()
+export const hapiServer = Hapi.server({ port: 3002, host: "localhost" });
+const init = async () => {
+  await hapiServer.start();
+  console.log("Server running on %s", hapiServer.info.uri);
+};
+hapiServer.route({
+  method: "GET",
+  path: "/",
+  handler: (request, response) => {
+    return "Hello World!";
+  },
+});
+init();
+// const server = createServer({
+//   name: "myapp",
+//   version: "1.0",
+// });
+// server.use(plugins.acceptParser(server.acceptable));
+// server.use(plugins.queryParser());
+// server.use(plugins.bodyParser());
+// server.get("/", function (req, res, next) {
+//   res.json("hello world");
+//   return "hello world";
+// });
+
+// server.listen(1612, function () {
+//   console.log("%s listening at %s", server.name, server.url);
+// });
+
+// server.use(init);
 appDataSource
   .initialize()
   .then(() => {

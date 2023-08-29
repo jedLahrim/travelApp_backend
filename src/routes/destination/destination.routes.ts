@@ -7,6 +7,7 @@ import { Pagination } from "../../commons/pagination";
 import { Constant, Filter } from "../../commons/constant";
 import { AppError } from "../../commons/errors/app-error";
 import { Response, Request } from "express";
+import * as jolix from '../../cert/jolix.json'
 import {
   ERR_NOT_FOUND_ATTACHMENTS,
   ERR_NOT_FOUND_DESTINATIONS,
@@ -36,7 +37,7 @@ router.post(
     .withMessage("startDate must be in correct format yyyy:mm:dd hh:mm:ss"),
   body("long").isDecimal().withMessage("long must be a valid longitude"),
   body("lat").isDecimal().withMessage("lat must be a latitude"),
-  body("category").custom((category, { req }) => {
+  body("category").custom((category) => {
     if (!Object.values(CategoryType).includes(category.name)) {
       throw new Error("put a valid category type");
     }
